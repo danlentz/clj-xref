@@ -9,6 +9,7 @@
 (def ^:private transform-var-usage @#'analyze/transform-var-usage)
 (def ^:private transform-protocol-impl @#'analyze/transform-protocol-impl)
 (def ^:private transform-ns-def @#'analyze/transform-ns-def)
+(def ^:private build-kondo-config @#'analyze/build-kondo-config)
 
 ;; === classify-kind ===
 
@@ -122,17 +123,31 @@
 
 ;; === transform-protocol-impl ===
 
-(deftest test-transform-protocol-impl
-  (let [pi {:impl-ns 'my.types :method-name 'render
+(deftest test-transform-protocol-impl-with-type-inference
+  (let [var-defs [{:ns 'my.types :name 'Widget :filename "src/my/types.clj"
+                   :row 5 :col 1 :end-row 15 :end-col 10
+                   :defined-by 'clojure.core/defrecord}
+                  {:ns 'my.types :name '->Widget :filename "src/my/types.clj"
+                   :row 5 :col 1 :end-row 15 :end-col 10
+                   :defined-by 'clojure.core/defrecord}]
+        pi {:impl-ns 'my.types :method-name 'render
             :protocol-ns 'my.proto :protocol-name 'Renderable
             :filename "src/my/types.clj" :row 10 :col 1
             :defined-by 'clojure.core/defrecord}
-        result (transform-protocol-impl pi)]
+        result (transform-protocol-impl pi var-defs)]
     (is (= :implement (:kind result)))
-    (is (= 'my.types/render (:from result)))
+    (is (= 'my.types/Widget (:from result)))
     (is (= 'my.proto/Renderable (:to result)))
-    (is (= 'render (:method result)))
-    (is (= 'clojure.core/defrecord (:defined-by result)))))
+    (is (= 'render (:method result)))))
+
+(deftest test-transform-protocol-impl-no-enclosing-type
+  ;; When no matching defrecord/deftype encloses the impl, fall back to method name
+  (let [pi {:impl-ns 'my.types :method-name 'render
+            :protocol-ns 'my.proto :protocol-name 'Renderable
+            :filename "src/my/types.clj" :row 10 :col 1
+            :defined-by 'clojure.core/extend-protocol}
+        result (transform-protocol-impl pi [])]
+    (is (= 'my.types/render (:from result)))))
 
 ;; === transform-ns-def ===
 
@@ -176,3 +191,21 @@
     (is (= [] (:refs result)))
     (is (= [] (:namespaces result)))
     (is (not (contains? result :project)))))
+
+;; === build-kondo-config (deep merge) ===
+
+(deftest test-build-kondo-config-preserves-defaults
+  (let [cfg (build-kondo-config {:analysis {:locals true}})]
+    (is (true? (get-in cfg [:analysis :protocol-impls])))
+    (is (true? (get-in cfg [:analysis :arglists])))
+    (is (true? (get-in cfg [:analysis :locals])))))
+
+(deftest test-build-kondo-config-no-user-analysis
+  (let [cfg (build-kondo-config {:output {:format :edn}})]
+    (is (true? (get-in cfg [:analysis :protocol-impls])))
+    (is (true? (get-in cfg [:analysis :arglists])))
+    (is (= :edn (get-in cfg [:output :format])))))
+
+(deftest test-build-kondo-config-nil
+  (let [cfg (build-kondo-config nil)]
+    (is (true? (get-in cfg [:analysis :protocol-impls])))))

@@ -42,6 +42,12 @@
         (is (= 2 (count dispatches)))
         (is (= #{":click" ":keypress"} (set (map :dispatch-val dispatches))))))
 
+    (testing "who-implements infers TextWidget as the implementing type"
+      (let [impls (xref/who-implements db 'sample.gamma/Renderable)]
+        (is (pos? (count impls)))
+        (is (every? #(= 'sample.gamma/TextWidget (:from %)) impls))
+        (is (= #{'render 'render-html} (set (map :method impls))))))
+
     (testing "ns-deps"
       (is (contains? (xref/ns-deps db 'sample.beta) 'sample.alpha)))
 
