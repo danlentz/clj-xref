@@ -6,4 +6,5 @@
   :dependencies [[org.clojure/clojure "1.12.2"]
                  [clj-kondo/clj-kondo "2026.01.19"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "1.1.1"]]}}
+  :signing  {:gpg-key "0CA466A1AB48F0C0264AF55307BAD70176C4B179"}
   :repl-options {:init-ns clj-xref.core})

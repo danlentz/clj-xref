@@ -6,9 +6,12 @@ All notable changes to this project will be documented in this file. This change
 ## [0.1.0] - 2026-04-13
 
 ### Added
-- Cross-reference database for Clojure code, built on clj-kondo static analysis.
+- Cross-reference database for Clojure code, built on clj-kondo 2026.01.19 static analysis.
 - Leiningen plugin (`lein xref`) and deps.edn tool (`clj -T:xref generate`) for generating EDN xref databases.
+- Incremental analysis: `:only` flag in both lein plugin and deps.edn tool for re-analyzing specific files without a full rebuild.
 - Query API: `who-calls`, `calls-who`, `who-references`, `who-macroexpands`, `who-implements`, `who-dispatches`, `ns-vars`, `ns-deps`, `ns-dependents`.
+- Derived queries: `unused-vars`, `call-graph` (transitive, depth-limited, bidirectional), `apropos` (regex search).
+- `clj-xref.graph` namespace: DOT/Graphviz output for namespace dependency graphs (`ns-dep-dot`) and call graphs (`call-graph-dot`).
 - Xref entry kinds: `:call`, `:reference`, `:macroexpand`, `:dispatch`, `:implement`.
 - Protocol implementation type inference from enclosing `defrecord`/`deftype`.
 - Validation: `from-kondo-analysis` throws on missing analysis data instead of producing empty databases.
