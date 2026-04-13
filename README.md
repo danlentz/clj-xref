@@ -1,6 +1,6 @@
 # clj-xref
 
-A cross-reference database for Clojure code, built on [clj-kondo](https://github.com/clj-kondo/clj-kondo) static analysis. Analyze your project once, then ask questions like "who calls this function?", "what does this function depend on?", and "where is this protocol implemented?"
+A cross-reference database for Clojure code, built on [clj-kondo](https://github.com/clj-kondo/clj-kondo) static analysis ([sponsor](https://github.com/sponsors/borkdude)). Analyze your project once, then ask questions like "who calls this function?", "what does this function depend on?", and "where is this protocol implemented?"
 
 ## What is it?
 
