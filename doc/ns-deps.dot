@@ -1,0 +1,11 @@
+digraph "clj-xref namespace dependencies" {
+  rankdir=LR
+  node [shape=box fontname="Helvetica" fontsize=11]
+  edge [color="#555555"]
+  "clj-xref.core" -> "clj-xref.emit"
+  "clj-xref.graph" -> "clj-xref.core"
+  "clj-xref.tool" -> "clj-xref.analyze"
+  "clj-xref.tool" -> "clj-xref.emit"
+  "leiningen.xref" -> "clj-xref.analyze"
+  "leiningen.xref" -> "clj-xref.emit"
+}
