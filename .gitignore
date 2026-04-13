@@ -11,3 +11,7 @@ pom.xml.asc
 /.prepl-port
 .hgignore
 .hg/
+/.clj-xref
+/CLAUDE.md
+/plans
+/AGENTS.md
