@@ -163,3 +163,10 @@
   (with-temp-edn [path]
     (spit path "{:broken [}")
     (is (thrown? Exception (emit/read-edn path)))))
+
+;; === from-kondo-analysis without analysis data ===
+
+(deftest test-from-kondo-analysis-missing-analysis
+  (is (thrown-with-msg? clojure.lang.ExceptionInfo
+        #"no :analysis data"
+        (xref/from-kondo-analysis {:findings [] :summary {}}))))

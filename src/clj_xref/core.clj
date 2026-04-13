@@ -43,8 +43,13 @@
 
 (defn from-kondo-analysis
   "Build an indexed xref database from a pre-computed clj-kondo result
-   (the return value of `clj-kondo.core/run!`)."
+   (the return value of `clj-kondo.core/run!`). The result must contain
+   :analysis data (enable with {:config {:analysis true}})."
   [kondo-result & [{:keys [paths project]}]]
+  (when-not (:analysis kondo-result)
+    (throw (ex-info (str "clj-kondo result contains no :analysis data. "
+                         "Enable with {:config {:analysis true}}")
+                    {:keys-present (vec (keys kondo-result))})))
   (let [transform-fn (requiring-resolve 'clj-xref.analyze/transform-analysis)]
     (-> (transform-fn (:analysis kondo-result) {:paths (or paths []) :project project})
         index)))
