@@ -1,14 +1,216 @@
 # clj-xref
 
-A Clojure library designed to ... well, that part is up to you.
+A cross-reference database for Clojure code. Analyze your project once, then ask questions like "who calls this function?", "what does this function depend on?", and "where is this protocol implemented?"
+
+## What is it?
+
+clj-xref builds a searchable cross-reference database from your Clojure source code. It works in two phases:
+
+1. **Generate** — Analyze your source files and write an EDN database to disk (via a Leiningen plugin or deps.edn tool)
+2. **Query** — Load the database and ask questions about your code from the REPL, scripts, or other tools
+
+Think of it as [ctags](https://ctags.io/) or [cscope](http://cscope.sourceforge.net/) for Clojure, but with semantic understanding of vars, namespaces, protocols, and multimethods. The API is inspired by [SBCL's `sb-introspect`](http://www.sbcl.org/manual/#sb_002dintrospect) (`who-calls`, `who-references`, `who-macroexpands`) and [Smalltalk's senders/implementors](https://wiki.c2.com/?FinderTool) queries.
+
+### Why you might want it
+
+**Understanding unfamiliar code.** You inherit a large Clojure codebase. You need to know what calls `process-payment` before you change its signature. `who-calls` gives you the answer instantly, across every namespace.
+
+**Feeding context to LLMs.** You're using an AI coding assistant and need to give it the right files. Instead of guessing or sending your entire `src/` tree, query the xref database for the dependency neighborhood of the function you're working on — just the relevant code, in far fewer tokens.
+
+**Dead code detection.** Find vars that are defined but never referenced from anywhere. Stop carrying code that nothing uses.
+
+**Codebase visualization.** Export the call graph or namespace dependency graph for documentation, onboarding, or architecture reviews.
+
+**CI and automation.** Run `lein xref` or `clj -T:xref generate` in CI to produce a cross-reference artifact. Use it downstream for impact analysis, change-risk estimation, or custom linting rules.
+
+**REPL-driven exploration.** Load the database in your REPL and explore interactively. Since queries return plain Clojure maps and vectors, you can compose them freely with `filter`, `map`, `group-by`, or anything else.
+
+### What it is not
+
+- **Not an IDE or editor plugin.** clj-xref is a library. It produces data. Editor integration can be built on top of it (and the API is designed for that), but clj-xref itself has no UI.
+- **Not a replacement for clojure-lsp.** If you want real-time find-references in your editor, use [clojure-lsp](https://clojure-lsp.io/). clj-xref is for programmatic, batch, and REPL use cases.
+- **Not a type checker or linter.** Use [clj-kondo](https://github.com/clj-kondo/clj-kondo) for that. (clj-xref uses clj-kondo internally for analysis.)
+
+## Installation
+
+### Leiningen
+
+Add clj-xref to your `:plugins` vector in `project.clj`:
+
+```clojure
+:plugins [[clj-xref "0.1.0-SNAPSHOT"]]
+```
+
+To also use the query API from your REPL, add it to `:dependencies`:
+
+```clojure
+:dependencies [[clj-xref "0.1.0-SNAPSHOT"]]
+```
+
+### deps.edn
+
+Add a tool alias to your `deps.edn`:
+
+```clojure
+{:aliases
+ {:xref {:extra-deps {clj-xref/clj-xref {:mvn/version "0.1.0-SNAPSHOT"}}
+         :ns-default clj-xref.tool}}}
+```
+
+To use the query API in your project, add clj-xref as a dependency:
+
+```clojure
+{:deps {clj-xref/clj-xref {:mvn/version "0.1.0-SNAPSHOT"}}}
+```
 
 ## Usage
 
-FIXME
+### Generating the database
+
+```bash
+# Leiningen — analyzes :source-paths and :test-paths
+lein xref
+
+# deps.edn
+clj -T:xref generate
+
+# Custom paths or output location
+lein xref :output target/xref.edn
+clj -T:xref generate :paths '["src"]' :output '"target/xref.edn"'
+```
+
+This produces `.clj-xref/xref.edn` — a plain EDN file containing every var definition, var usage, protocol implementation, and multimethod dispatch in your project.
+
+### Querying from the REPL
+
+```clojure
+(require '[clj-xref.core :as xref])
+
+;; Load the generated database
+(def db (xref/load-db))
+
+;; Who calls this function?
+(xref/who-calls db 'myapp.orders/process-payment)
+;; => [{:kind :call, :from myapp.web/checkout-handler,
+;;      :to myapp.orders/process-payment,
+;;      :file "src/myapp/web.clj", :line 47, :col 5, :arity 2}
+;;     {:kind :call, :from myapp.batch/retry-failed,
+;;      :to myapp.orders/process-payment,
+;;      :file "src/myapp/batch.clj", :line 23, :col 7, :arity 2}]
+
+;; What does this function call?
+(xref/calls-who db 'myapp.web/checkout-handler)
+
+;; Who implements this protocol?
+(xref/who-implements db 'myapp.protocols/Billable)
+
+;; What dispatch values exist for this multimethod?
+(xref/who-dispatches db 'myapp.events/handle-event)
+
+;; Which namespaces depend on this one?
+(xref/ns-dependents db 'myapp.orders)
+```
+
+Since results are plain maps and vectors, compose with standard Clojure:
+
+```clojure
+;; All external callers of process-payment (excluding same-namespace calls)
+(->> (xref/who-calls db 'myapp.orders/process-payment)
+     (remove #(= "myapp.orders" (namespace (:from %)))))
+
+;; Vars in myapp.util that nothing in the project references
+(let [util-vars (map :name (xref/ns-vars db 'myapp.util))]
+  (filter #(empty? (xref/who-references db %)) util-vars))
+```
+
+### Querying without generating a file
+
+If you don't need the EDN file, you can analyze and query in-memory directly:
+
+```clojure
+(def db (xref/analyze ["src" "test"]))
+(xref/who-calls db 'myapp.orders/process-payment)
+```
+
+This requires clj-kondo on the classpath.
+
+## Query API Reference
+
+All query functions take a database (from `load-db` or `analyze`) and return vectors of maps.
+
+| Function | Returns |
+|---|---|
+| `(who-calls db sym)` | Call sites of `sym` |
+| `(calls-who db sym)` | Vars called by `sym` |
+| `(who-references db sym)` | All references to `sym` (calls, reads, macroexpansions) |
+| `(who-macroexpands db sym)` | Sites where the macro `sym` is expanded |
+| `(who-implements db sym)` | Implementations of the protocol `sym` |
+| `(who-dispatches db sym)` | `defmethod` dispatch values for the multimethod `sym` |
+| `(ns-vars db ns-sym)` | All var definitions in a namespace |
+| `(ns-deps db ns-sym)` | Namespaces that `ns-sym` depends on |
+| `(ns-dependents db ns-sym)` | Namespaces that depend on `ns-sym` |
+
+### Xref entry shape
+
+Each entry in a query result is a map:
+
+```clojure
+{:kind     :call          ; :call, :reference, :macroexpand, :dispatch, :implement
+ :from     'myapp.web/handler  ; the var containing this reference
+ :to       'myapp.db/query     ; the var being referenced
+ :file     "src/myapp/web.clj"
+ :line     42
+ :col      5
+ :arity    2}             ; for :call kind — which arity was used
+```
+
+## How it works
+
+clj-xref uses [clj-kondo](https://github.com/clj-kondo/clj-kondo) as its analysis engine. clj-kondo statically parses your Clojure source (without evaluating it) and produces detailed analysis data: every var definition, every var usage, every protocol implementation.
+
+clj-xref transforms this raw analysis into a normalized data model and writes it as EDN. At query time, it reads the EDN and builds in-memory indexes (`group-by :to`, `group-by :from`, `group-by :file`) for O(1) lookups.
+
+```
+Source files  -->  clj-kondo  -->  clj-xref.analyze  -->  .clj-xref/xref.edn
+                                                                |
+                                                          clj-xref.core
+                                                                |
+                                                     who-calls, ns-deps, ...
+```
+
+### Limitations
+
+- **Macros.** clj-xref sees macro call sites (as `:macroexpand` entries), but cannot see what the macro expands into. If a macro generates calls to other functions, those calls are invisible unless clj-kondo has a [hook](https://github.com/clj-kondo/clj-kondo/blob/master/doc/hooks.md) for that macro.
+- **Dynamic dispatch.** `(map f coll)` — clj-xref knows that `map` is called, but cannot resolve what `f` is. Higher-order function patterns create edges that no static analysis can fully capture.
+- **No runtime data.** clj-xref works purely from source. It does not evaluate your code or require a running REPL. This is a deliberate tradeoff: no side effects, no startup penalty, but no access to runtime-only information.
+
+## EDN Database Format
+
+The generated file is plain, human-readable EDN:
+
+```clojure
+{
+ :version 1
+ :generated "2026-04-13T20:23:57Z"
+ :project "my-app"
+ :paths ["src" "test"]
+ :namespaces [
+  {:name my.app.core, :file "src/my/app/core.clj", :line 1, :col 1}
+ ]
+ :vars [
+  {:name my.app.core/main, :ns my.app.core, :local-name main, ...}
+ ]
+ :refs [
+  {:kind :call, :from my.app.core/main, :to my.app.db/connect, :file "src/my/app/core.clj", :line 12, :col 5}
+ ]
+}
+```
+
+One entry per line within vectors, so the file is greppable and diffable.
 
 ## License
 
-Copyright © 2026 FIXME
+Copyright 2026
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
