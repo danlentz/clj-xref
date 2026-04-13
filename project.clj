@@ -5,4 +5,5 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.12.2"]
                  [clj-kondo/clj-kondo "2024.08.01"]]
+  :profiles {:dev {:dependencies [[org.clojure/test.check "1.1.1"]]}}
   :repl-options {:init-ns clj-xref.core})
