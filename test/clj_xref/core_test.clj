@@ -183,3 +183,81 @@
 
 (deftest test-ns-dependents-no-dependents
   (is (= #{} (xref/ns-dependents db 'app.core))))
+
+;; === unused-vars ===
+
+(deftest test-unused-vars
+  (let [unused (set (map :name (xref/unused-vars db)))]
+    ;; main is never the :to of any ref — it IS unused
+    (is (contains? unused 'app.core/main))
+    ;; handler is called by main
+    (is (not (contains? unused 'app.core/handler)))
+    ;; format-name and with-log are referenced
+    (is (not (contains? unused 'app.util/format-name)))
+    (is (not (contains? unused 'app.util/with-log)))))
+
+(deftest test-unused-vars-include-private
+  (let [db (make-indexed-db
+             {:vars [(make-var 'a 'pub)
+                     (make-var 'a 'priv :private? true)]
+              :refs []
+              :namespaces [(make-ns 'a)]})
+        without-private (map :name (xref/unused-vars db))
+        with-private (map :name (xref/unused-vars db {:include-private? true}))]
+    (is (= ['a/pub] without-private))
+    (is (= #{'a/pub 'a/priv} (set with-private)))))
+
+;; === call-graph ===
+
+(deftest test-call-graph-outgoing
+  (let [edges (xref/call-graph db 'app.core/main {:depth 2 :direction :outgoing})]
+    ;; main -> handler, main -> format-name
+    (is (contains? edges ['app.core/main 'app.core/handler]))
+    (is (contains? edges ['app.core/main 'app.util/format-name]))
+    ;; handler -> format-name (depth 2)
+    (is (contains? edges ['app.core/handler 'app.util/format-name]))))
+
+(deftest test-call-graph-incoming
+  (let [edges (xref/call-graph db 'app.util/format-name {:depth 2 :direction :incoming})]
+    ;; handler -> format-name, main -> format-name
+    (is (contains? edges ['app.core/handler 'app.util/format-name]))
+    (is (contains? edges ['app.core/main 'app.util/format-name]))))
+
+(deftest test-call-graph-depth-limit
+  (let [edges-d1 (xref/call-graph db 'app.core/main {:depth 1})
+        edges-d2 (xref/call-graph db 'app.core/main {:depth 2})]
+    ;; depth 1: only direct callees
+    (is (every? #(= 'app.core/main (first %)) edges-d1))
+    ;; depth 2: includes transitive
+    (is (>= (count edges-d2) (count edges-d1)))))
+
+(deftest test-call-graph-cycle
+  (let [db (make-indexed-db
+             {:vars [(make-var 'a 'f) (make-var 'a 'g)]
+              :refs [(make-ref :call 'a/f 'a/g)
+                     (make-ref :call 'a/g 'a/f)]
+              :namespaces [(make-ns 'a)]})
+        edges (xref/call-graph db 'a/f {:depth 10})]
+    ;; Both edges present — back-edges are preserved
+    (is (contains? edges ['a/f 'a/g]))
+    (is (contains? edges ['a/g 'a/f]))
+    ;; Should terminate despite cycle
+    (is (= 2 (count edges)))))
+
+(deftest test-call-graph-empty
+  (is (= #{} (xref/call-graph db 'app.util/format-name {:depth 3 :direction :outgoing}))))
+
+;; === apropos ===
+
+(deftest test-apropos
+  (let [results (xref/apropos db "format")]
+    (is (= 1 (count results)))
+    (is (= 'app.util/format-name (:name (first results))))))
+
+(deftest test-apropos-regex
+  (let [results (xref/apropos db #"(?i)process")]
+    (is (= #{'app.core/process 'app.core/process-event}
+           (set (map :name results))))))
+
+(deftest test-apropos-no-match
+  (is (= [] (xref/apropos db "zzzzz"))))

@@ -123,3 +123,57 @@
                          (remove nil?)
                          (remove #(= ns-str %))
                          (map symbol))))))
+
+;; === Derived queries ===
+
+(defn unused-vars
+  "Find vars that are defined but never referenced.
+   Options:
+     :include-private? - include private vars (default false)"
+  [db & [{:keys [include-private?] :or {include-private? false}}]]
+  (let [referenced (set (keys (:by-target db)))]
+    (filterv (fn [v]
+               (and (not (contains? referenced (:name v)))
+                    (or include-private? (not (:private? v)))))
+             (:vars db))))
+
+(defn call-graph
+  "Build a transitive call graph starting from `sym`.
+   Returns a set of [from to] edges.
+   Options:
+     :depth     - max traversal depth (default 3)
+     :direction - :outgoing (what does sym call?) or :incoming (who calls sym?)"
+  [db sym & [{:keys [depth direction] :or {depth 3 direction :outgoing}}]]
+  (loop [frontier #{sym}
+         visited  #{}
+         edges    #{}
+         d        0]
+    (if (or (>= d depth) (empty? frontier))
+      edges
+      (let [all-data (for [s frontier
+                          ref (case direction
+                                :outgoing (calls-who db s)
+                                :incoming (who-calls db s))
+                          :let [neighbor (case direction
+                                           :outgoing (:to ref)
+                                           :incoming (:from ref))
+                                edge (case direction
+                                       :outgoing [s neighbor]
+                                       :incoming [neighbor s])]]
+                      {:edge edge :next neighbor})
+            new-edges    (into edges (map :edge all-data))
+            new-frontier (into #{} (comp (map :next)
+                                         (remove #(contains? visited %)))
+                               all-data)]
+        (recur new-frontier
+               (into visited frontier)
+               new-edges
+               (inc d))))))
+
+(defn apropos
+  "Find vars whose fully-qualified name matches `pattern` (string or regex)."
+  [db pattern]
+  (let [re (if (instance? java.util.regex.Pattern pattern)
+             pattern
+             (re-pattern (str pattern)))]
+    (filterv #(re-find re (str (:name %))) (:vars db))))
