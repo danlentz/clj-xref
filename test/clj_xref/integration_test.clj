@@ -74,8 +74,8 @@
 (deftest test-self-analysis
   (let [db (xref/analyze ["src"])]
 
-    (testing "finds all 5 namespaces"
-      (is (= 5 (count (:namespaces db)))))
+    (testing "finds all 6 namespaces"
+      (is (= 6 (count (:namespaces db)))))
 
     (testing "index is called by load-db, analyze, from-kondo-analysis"
       (let [callers (froms (xref/who-calls db 'clj-xref.core/index))]
@@ -105,3 +105,24 @@
     (is (= "kondo-test" (:project db)))
     (is (pos? (count (:vars db))))
     (is (pos? (count (xref/who-calls db 'sample.alpha/greet))))))
+
+;; === Incremental merge ===
+
+(deftest test-incremental-merge
+  (let [analyze-fn (requiring-resolve 'clj-xref.analyze/analyze)
+        merge-fn   (requiring-resolve 'clj-xref.analyze/merge-analysis)
+        ;; Full analysis
+        full-db (analyze-fn ["test-fixtures"] {:project "merge-test"})
+        full-var-count (count (:vars full-db))
+        full-ref-count (count (:refs full-db))
+        ;; Re-analyze just beta.clj
+        beta-db (analyze-fn ["test-fixtures/sample/beta.clj"] {:project "merge-test"})
+        ;; Merge
+        merged (merge-fn full-db beta-db ["test-fixtures/sample/beta.clj"])
+        merged-indexed (xref/index merged)]
+    ;; Counts should be the same (replaced, not duplicated)
+    (is (= full-var-count (count (:vars merged))))
+    (is (= full-ref-count (count (:refs merged))))
+    ;; Queries still work
+    (is (pos? (count (xref/who-calls merged-indexed 'sample.alpha/greet)))))
+)

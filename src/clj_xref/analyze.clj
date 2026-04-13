@@ -146,4 +146,22 @@
       (binding [*out* *err*]
         (println (str "clj-xref: warning: clj-kondo reported " errors " error(s). "
                       "The xref database may be incomplete."))))
-    (transform-analysis (:analysis result) {:paths paths :project project})))
+    (vary-meta
+      (transform-analysis (:analysis result) {:paths paths :project project})
+      assoc :kondo-errors errors)))
+
+(defn merge-analysis
+  "Merge new analysis into an existing database, replacing entries from
+   the re-analyzed files. Used for incremental updates."
+  [existing-db new-db files]
+  (let [file-set (set files)]
+    {:version    (:version existing-db)
+     :generated  (:generated new-db)
+     :project    (:project existing-db)
+     :paths      (:paths existing-db)
+     :vars       (into (vec (remove #(contains? file-set (:file %)) (:vars existing-db)))
+                       (:vars new-db))
+     :refs       (into (vec (remove #(contains? file-set (:file %)) (:refs existing-db)))
+                       (:refs new-db))
+     :namespaces (into (vec (remove #(contains? file-set (:file %)) (:namespaces existing-db)))
+                       (:namespaces new-db))}))
