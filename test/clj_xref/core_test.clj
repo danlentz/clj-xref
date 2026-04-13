@@ -1,8 +1,7 @@
 (ns clj-xref.core-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [clj-xref.core :as xref]
-            [clj-xref.emit :as emit]
-            [clojure.java.io :as io]))
+            [clj-xref.emit :as emit]))
 
 ;; === Synthetic test data (no kondo dependency) ===
 
