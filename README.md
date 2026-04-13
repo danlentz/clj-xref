@@ -1,6 +1,6 @@
 # clj-xref
 
-A cross-reference database for Clojure code. Analyze your project once, then ask questions like "who calls this function?", "what does this function depend on?", and "where is this protocol implemented?"
+A cross-reference database for Clojure code, built on [clj-kondo](https://github.com/clj-kondo/clj-kondo) static analysis. Analyze your project once, then ask questions like "who calls this function?", "what does this function depend on?", and "where is this protocol implemented?"
 
 ## What is it?
 
@@ -13,9 +13,9 @@ Think of it as [ctags](https://ctags.io/) or [cscope](http://cscope.sourceforge.
 
 ### Why you might want it
 
-**Understanding unfamiliar code.** You inherit a large Clojure codebase. You need to know what calls `process-payment` before you change its signature. `who-calls` gives you the answer instantly, across every namespace.
+**Feeding context to LLMs.** Instead of guessing or having it search your entire `src/` tree, it can query the xref database for the dependency neighborhood of the function you're working on — just the relevant code, in far fewer tokens.
 
-**Feeding context to LLMs.** You're using an AI coding assistant and need to give it the right files. Instead of guessing or sending your entire `src/` tree, query the xref database for the dependency neighborhood of the function you're working on — just the relevant code, in far fewer tokens.
+**Understanding unfamiliar code.** You inherit a large Clojure codebase. You need to know what calls `process-payment` before you change its signature. `who-calls` gives you the answer instantly, across every namespace.
 
 **Dead code detection.** Find vars that are defined but never referenced from anywhere. Stop carrying code that nothing uses.
 
@@ -207,6 +207,17 @@ The generated file is plain, human-readable EDN:
 ```
 
 One entry per line within vectors, so the file is greppable and diffable.
+
+## Acknowledgments
+
+clj-xref is built entirely on the analysis engine of [clj-kondo](https://github.com/clj-kondo/clj-kondo) by [Michiel Borkent (borkdude)](https://github.com/borkdude). clj-kondo's fast, accurate static analysis of Clojure code — without requiring evaluation — is what makes clj-xref possible. If you find clj-xref useful, consider [sponsoring clj-kondo](https://github.com/sponsors/borkdude).
+
+### References
+
+- [clj-kondo](https://github.com/clj-kondo/clj-kondo) — Static analyzer and linter for Clojure. Provides the analysis data that clj-xref transforms into a queryable cross-reference database.
+- [clj-kondo analysis data format](https://github.com/clj-kondo/clj-kondo/blob/master/analysis/README.md) — Documentation for the `:analysis` output that clj-xref consumes.
+- [SBCL cross-reference facility](http://www.sbcl.org/manual/#sb_002dintrospect) — The `who-calls`, `who-references`, `who-macroexpands` API that inspired clj-xref's query interface.
+- [clojure-lsp](https://clojure-lsp.io/) — Language Server Protocol implementation for Clojure, also built on clj-kondo. Provides real-time editor integration; clj-xref targets programmatic and batch use cases instead.
 
 ## License
 
