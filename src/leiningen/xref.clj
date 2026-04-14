@@ -54,7 +54,12 @@
                       (into (vec (:source-paths project))
                             (:test-paths project))))]
         (println (str "clj-xref: analyzing " (pr-str paths) "..."))
-        (let [db (analyze/analyze paths {:project proj-name})]
-          (emit/write-edn db output)
-          (println (str "clj-xref: wrote " (count (:vars db)) " vars, "
-                        (count (:refs db)) " refs -> " output)))))))
+        (let [db     (analyze/analyze paths {:project proj-name})
+              errors (:kondo-errors (meta db) 0)]
+          (if (pos? errors)
+            (binding [*out* *err*]
+              (println "clj-xref: generation aborted due to analysis errors. No file written."))
+            (do
+              (emit/write-edn db output)
+              (println (str "clj-xref: wrote " (count (:vars db)) " vars, "
+                            (count (:refs db)) " refs -> " output)))))))))

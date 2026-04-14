@@ -3,10 +3,10 @@
 
    Compares whole-tree vs xref-guided context selection by asking Claude
    the same questions under both strategies and measuring token usage
-   and answer correctness."
+   and answer correctness.
+
+   Requires clj-http and cheshire on the classpath (available via :dev profile)."
   (:require [clj-xref.core :as xref]
-            [clj-http.client :as http]
-            [cheshire.core :as json]
             [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -81,16 +81,18 @@
 (defn- ask-claude
   "Send a question with context to the Claude Messages API."
   [context question {:keys [model] :or {model default-model}}]
-  (let [prompt (str "You are answering questions about a Clojure codebase.\n\n"
+  (let [http-post       (requiring-resolve 'clj-http.client/post)
+        json-generate   (requiring-resolve 'cheshire.core/generate-string)
+        prompt (str "You are answering questions about a Clojure codebase.\n\n"
                     "Source code:\n\n" context
                     "\n\nQuestion: " question
                     "\n\nAnswer concisely, citing specific function names and namespaces.")
         start  (System/nanoTime)
-        resp   (http/post "https://api.anthropic.com/v1/messages"
+        resp   (http-post "https://api.anthropic.com/v1/messages"
                  {:headers      {"x-api-key"         (api-key)
                                  "anthropic-version"  "2023-06-01"
                                  "content-type"       "application/json"}
-                  :body         (json/generate-string
+                  :body         (json-generate
                                   {:model      model
                                    :max_tokens 1024
                                    :messages   [{:role "user" :content prompt}]})
