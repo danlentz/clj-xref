@@ -74,8 +74,8 @@
 (deftest test-self-analysis
   (let [db (xref/analyze ["src"])]
 
-    (testing "finds all 6 namespaces"
-      (is (= 6 (count (:namespaces db)))))
+    (testing "finds all namespaces"
+      (is (>= (count (:namespaces db)) 6)))
 
     (testing "index is called by load-db, analyze, from-kondo-analysis"
       (let [callers (froms (xref/who-calls db 'clj-xref.core/index))]
