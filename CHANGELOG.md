@@ -15,7 +15,9 @@ All notable changes to this project will be documented in this file. This change
 - Xref entry kinds: `:call`, `:reference`, `:macroexpand`, `:dispatch`, `:implement`.
 - Protocol implementation type inference from enclosing `defrecord`/`deftype`.
 - Validation: `from-kondo-analysis` throws on missing analysis data instead of producing empty databases.
-- Warning to stderr when clj-kondo reports analysis errors.
+- LLM token savings benchmark (`lein measure-improvement`): compares whole-tree vs xref-guided context selection using the Claude API.
+- Warning to stderr when clj-kondo reports analysis errors; generation aborted on errors to prevent writing partial databases.
+- Atomic EDN writes via temp file + rename to prevent corruption on interrupted writes.
 - Deep-merge of `:analysis` kondo config so caller additions don't clobber built-in defaults.
 - Comprehensive test suite: unit, adversarial, stress, generative (test.check), and integration tests.
 - GitHub Actions CI workflow (Temurin JDK 25, lein + clojure CLI).

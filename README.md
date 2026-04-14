@@ -254,6 +254,18 @@ The generated file is plain, human-readable EDN:
 
 One entry per line within vectors, so the file is greppable and diffable.
 
+## Measuring token savings
+
+clj-xref includes a benchmark that measures the token reduction from xref-guided context selection. It asks Claude the same questions about the codebase under two strategies — whole source tree vs xref-guided neighborhood — and compares input token counts and answer quality.
+
+```bash
+# Requires ANTHROPIC_API_KEY and clj-http (included in :dev profile)
+lein measure-improvement
+lein measure-improvement :model claude-sonnet-4-6
+```
+
+On clj-xref's own source, the xref-guided approach selects 1-3 files instead of 8, reducing context by 66-80%.
+
 ## Acknowledgments
 
 clj-xref is built entirely on the analysis engine of [clj-kondo](https://github.com/clj-kondo/clj-kondo) by [Michiel Borkent (borkdude)](https://github.com/borkdude). clj-kondo's fast, accurate static analysis of Clojure code — without requiring evaluation — is what makes clj-xref possible. If you find clj-xref useful, consider [sponsoring clj-kondo](https://github.com/sponsors/borkdude).
