@@ -7,6 +7,7 @@
 
    Requires clj-http and cheshire on the classpath (available via :dev profile)."
   (:require [clj-xref.core :as xref]
+            [clj-format.core :refer [clj-format]]
             [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -150,21 +151,27 @@
 
 ;; === Benchmark runner ===
 
+(def ^:private fmt-progress
+  ["  " :str ": whole-tree (" :int " file" [:plural {:rewind true}] ")... "])
+
+(def ^:private fmt-progress-guided
+  [:int "t -> xref-guided (" :int " file" [:plural {:rewind true}] ")... "])
+
 (defn- run-single
   "Run one question under both strategies."
   [db paths question opts]
   (let [{:keys [id question target expected]} question
         whole   (whole-tree-context paths)
         guided  (xref-guided-context db target paths)]
-    (print (str "  " (name id) ": whole-tree (" (:file-count whole) " files)... "))
+    (clj-format true fmt-progress (name id) (:file-count whole))
     (flush)
     (let [wr (ask-claude (:context whole) question opts)
           wc (check-correctness (:answer wr) expected)]
-      (print (str (:input-tokens wr) "t -> xref-guided (" (:file-count guided) " files)... "))
+      (clj-format true fmt-progress-guided (:input-tokens wr) (:file-count guided))
       (flush)
       (let [gr (ask-claude (:context guided) question opts)
             gc (check-correctness (:answer gr) expected)]
-        (println (str (:input-tokens gr) "t"))
+        (clj-format true [:int "t" :nl] (:input-tokens gr))
         {:id id
          :whole   (merge (select-keys wr [:input-tokens :output-tokens :latency-ms])
                          (select-keys whole [:file-count :char-count])
@@ -177,6 +184,17 @@
                     (double (- 1 (/ (:input-tokens gr)
                                     (:input-tokens wr)))))}))))
 
+(def ^:private fmt-banner
+  ["clj-xref benchmark" :nl
+   "  analyzing " :pr "..." :nl])
+
+(def ^:private fmt-stats
+  ["  " :int " var" [:plural {:rewind true}]
+   ", " :int " ref" [:plural {:rewind true}] :nl])
+
+(def ^:private fmt-running
+  ["  running " :int " question" [:plural {:rewind true}] " against " :str "..." :nl :nl])
+
 (defn run-benchmark
   "Run the full benchmark. Returns vector of result maps.
    Options:
@@ -186,59 +204,79 @@
   [{:keys [paths model questions]
     :or   {paths     ["src"]
            questions test-questions}}]
-  (println "clj-xref benchmark")
-  (println (str "  analyzing " (pr-str paths) "..."))
+  (clj-format true fmt-banner paths)
   (let [db   (xref/analyze paths)
         opts (cond-> {} model (assoc :model model))]
-    (println (str "  " (count (:vars db)) " vars, " (count (:refs db)) " refs"))
-    (println (str "  running " (count questions) " questions against "
-                  (or model default-model) "..."))
-    (println)
+    (clj-format true fmt-stats (count (:vars db)) (count (:refs db)))
+    (clj-format true fmt-running (count questions) (or model default-model))
     (mapv #(run-single db paths % opts) questions)))
 
 ;; === Output ===
 
+(def ^:private fmt-header
+  [:nl "=== clj-xref Token Savings Benchmark ===" :nl :nl
+   "  " [:str {:width 22}]
+   [:str {:width 11 :pad :left}]
+   [:str {:width 11 :pad :left}]
+   [:str {:width 9 :pad :left}]
+   "  " [:str {:width 6 :pad :left}]
+   " " [:str {:width 6 :pad :left}] :nl])
+
+(def ^:private fmt-row
+  ["  " [:str {:width 22}]
+   [:int {:width 9 :pad :left}] "t "
+   [:int {:width 9 :pad :left}] "t "
+   [:int {:width 5 :pad :left}] "% "
+   " " [:int {:width 4 :pad :left}] "% "
+   [:int {:width 4 :pad :left}] "%" :nl])
+
+(def ^:private fmt-separator
+  ["  " [:each {:max 68} "-"] :nl])
+
+(def ^:private fmt-totals
+  [:nl "  Total tokens: whole-tree " :int ", xref-guided " :int
+   " (" :int "% reduction)" :nl])
+
+(def ^:private fmt-miss
+  ["    " :str " (" :str "): " [:each {:sep ", "} :str] :nl])
+
 (defn print-results
   "Print a comparison table."
   [results]
-  (println)
-  (println "=== clj-xref Token Savings Benchmark ===")
-  (println)
-  (printf "  %-22s %10s %10s %8s  %6s %6s%n"
-          "" "Whole-tree" "Xref" "Savings" "W-Acc" "X-Acc")
-  (println (str "  " (apply str (repeat 68 "-"))))
+  (clj-format true fmt-header
+              "" "Whole-tree" "Xref" "Savings" "W-Acc" "X-Acc")
+  (clj-format true fmt-separator (repeat 68 "-"))
   (doseq [r results]
-    (printf "  %-22s %9dt %9dt %6.0f%%  %5.0f%% %5.0f%%%n"
-            (name (:id r))
-            (get-in r [:whole :input-tokens] 0)
-            (get-in r [:guided :input-tokens] 0)
-            (* 100.0 (or (:savings r) 0))
-            (* 100.0 (get-in r [:whole :score] 0))
-            (* 100.0 (get-in r [:guided :score] 0))))
-  (println (str "  " (apply str (repeat 68 "-"))))
+    (clj-format true fmt-row
+                (name (:id r))
+                (get-in r [:whole :input-tokens] 0)
+                (get-in r [:guided :input-tokens] 0)
+                (Math/round (* 100.0 (or (:savings r) 0)))
+                (Math/round (* 100.0 (get-in r [:whole :score] 0)))
+                (Math/round (* 100.0 (get-in r [:guided :score] 0)))))
+  (clj-format true fmt-separator (repeat 68 "-"))
   (let [n (count results)
-        avg-savings     (/ (reduce + (keep :savings results)) (max 1 n))
-        avg-whole-score (/ (reduce + (map #(get-in % [:whole :score]) results)) (max 1 n))
+        avg-savings      (/ (reduce + (keep :savings results)) (max 1 n))
+        avg-whole-score  (/ (reduce + (map #(get-in % [:whole :score]) results)) (max 1 n))
         avg-guided-score (/ (reduce + (map #(get-in % [:guided :score]) results)) (max 1 n))
-        total-whole-tokens (reduce + (map #(get-in % [:whole :input-tokens] 0) results))
-        total-guided-tokens (reduce + (map #(get-in % [:guided :input-tokens] 0) results))]
-    (printf "  %-22s %9dt %9dt %6.0f%%  %5.0f%% %5.0f%%%n"
-            "AVERAGE" (quot total-whole-tokens n) (quot total-guided-tokens n)
-            (* 100.0 avg-savings) (* 100.0 avg-whole-score) (* 100.0 avg-guided-score))
-    (println)
-    (println (str "  Total tokens: whole-tree " total-whole-tokens
-                  ", xref-guided " total-guided-tokens
-                  " (" (format "%.0f" (* 100.0 (- 1 (/ (double total-guided-tokens)
-                                                         (max 1 total-whole-tokens)))))
-                  "% reduction)")))
-  ;; Print any misses
+        total-whole      (reduce + (map #(get-in % [:whole :input-tokens] 0) results))
+        total-guided     (reduce + (map #(get-in % [:guided :input-tokens] 0) results))]
+    (clj-format true fmt-row
+                "AVERAGE"
+                (quot total-whole n) (quot total-guided n)
+                (Math/round (* 100.0 avg-savings))
+                (Math/round (* 100.0 avg-whole-score))
+                (Math/round (* 100.0 avg-guided-score)))
+    (clj-format true fmt-totals
+                total-whole total-guided
+                (Math/round (* 100.0 (- 1 (/ (double total-guided)
+                                              (max 1 total-whole)))))))
   (let [misses (for [r results
                      strategy [:whole :guided]
                      :let [m (get-in r [strategy :misses])]
                      :when (seq m)]
                  {:id (:id r) :strategy strategy :misses m})]
     (when (seq misses)
-      (println)
-      (println "  Missed expected terms:")
+      (clj-format true [:nl "  Missed expected terms:" :nl])
       (doseq [{:keys [id strategy misses]} misses]
-        (println (str "    " (name id) " (" (name strategy) "): " (str/join ", " misses)))))))
+        (clj-format true fmt-miss (name id) (name strategy) misses)))))

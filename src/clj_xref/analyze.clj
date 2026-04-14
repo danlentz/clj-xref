@@ -1,6 +1,7 @@
 (ns clj-xref.analyze
   "Transform clj-kondo analysis data into the clj-xref data model."
-  (:require [clj-kondo.core :as kondo])
+  (:require [clj-kondo.core :as kondo]
+            [clj-format.core :refer [clj-format]])
   (:import [java.time Instant]))
 
 (defn- qualify-symbol
@@ -144,8 +145,9 @@
         errors (get-in result [:summary :error] 0)]
     (when (pos? errors)
       (binding [*out* *err*]
-        (println (str "clj-xref: warning: clj-kondo reported " errors " error(s). "
-                      "The xref database may be incomplete."))))
+        (clj-format true ["clj-xref: warning: clj-kondo reported " :int " error"
+                          [:plural {:rewind true}] ". The xref database may be incomplete." :nl]
+                    errors)))
     (vary-meta
       (transform-analysis (:analysis result) {:paths paths :project project})
       assoc :kondo-errors errors)))

@@ -6,7 +6,24 @@
      clj -T:xref generate :paths '[\"src\"]' :output '\"target/xref.edn\"'
      clj -T:xref generate :only '[\"src/my/ns.clj\"]'"
   (:require [clj-xref.analyze :as analyze]
-            [clj-xref.emit :as emit]))
+            [clj-xref.emit :as emit]
+            [clj-format.core :refer [clj-format]]))
+
+(def ^:private fmt-analyzing
+  ["clj-xref: analyzing " :pr "..." :nl])
+
+(def ^:private fmt-incremental
+  ["clj-xref: incremental update for " :pr "..." :nl])
+
+(def ^:private fmt-wrote
+  ["clj-xref: wrote " :int " var" [:plural {:rewind true}]
+   ", " :int " ref" [:plural {:rewind true}] " -> " :str :nl])
+
+(def ^:private fmt-aborted-errors
+  ["clj-xref: generation aborted due to analysis errors. No file written." :nl])
+
+(def ^:private fmt-aborted-incremental
+  ["clj-xref: incremental update aborted due to analysis errors. Existing database unchanged." :nl])
 
 (defn generate
   "Generate an xref database EDN file.
@@ -20,26 +37,23 @@
            output ".clj-xref/xref.edn"}}]
   (if only
     (do
-      (println (str "clj-xref: incremental update for " (pr-str only) "..."))
+      (clj-format true fmt-incremental only)
       (let [existing (emit/read-edn output)
             new-db   (analyze/analyze only {:project project})
             errors   (:kondo-errors (meta new-db) 0)]
         (if (pos? errors)
-          (binding [*out* *err*]
-            (println "clj-xref: incremental update aborted due to analysis errors. Existing database unchanged."))
+          (binding [*out* *err*] (clj-format true fmt-aborted-incremental))
           (let [merged (analyze/merge-analysis existing new-db only)]
             (emit/write-edn merged output)
-            (println (str "clj-xref: wrote " (count (:vars merged)) " vars, "
-                          (count (:refs merged)) " refs -> " output))))))
+            (clj-format true fmt-wrote
+                        (count (:vars merged)) (count (:refs merged)) output)))))
     (do
-      (println (str "clj-xref: analyzing " (pr-str paths) "..."))
+      (clj-format true fmt-analyzing paths)
       (let [db     (analyze/analyze paths {:project project})
             errors (:kondo-errors (meta db) 0)]
         (if (pos? errors)
-          (binding [*out* *err*]
-            (println "clj-xref: generation aborted due to analysis errors. No file written."))
+          (binding [*out* *err*] (clj-format true fmt-aborted-errors))
           (do
             (emit/write-edn db output)
-            (println (str "clj-xref: wrote " (count (:vars db)) " vars, "
-                          (count (:refs db)) " refs -> " output))))))))
-
+            (clj-format true fmt-wrote
+                        (count (:vars db)) (count (:refs db)) output)))))))
