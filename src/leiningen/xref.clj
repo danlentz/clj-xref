@@ -19,12 +19,6 @@
   ["clj-xref: wrote " :int " var" [:plural {:rewind true}]
    ", " :int " ref" [:plural {:rewind true}] " -> " :str :nl])
 
-(def ^:private fmt-aborted-errors
-  ["clj-xref: generation aborted due to analysis errors. No file written." :nl])
-
-(def ^:private fmt-aborted-incremental
-  ["clj-xref: incremental update aborted due to analysis errors. Existing database unchanged." :nl])
-
 (defn- parse-args
   "Parse lein task args into {:output str, :only [str ...], :paths [str ...]}."
   [args]
@@ -57,24 +51,17 @@
         (clj-format true fmt-incremental only)
         (let [existing (emit/read-edn output)
               new-db   (analyze/analyze only {:project proj-name})
-              errors   (:kondo-errors (meta new-db) 0)]
-          (if (pos? errors)
-            (binding [*out* *err*] (clj-format true fmt-aborted-incremental))
-            (let [merged (analyze/merge-analysis existing new-db only)]
-              (emit/write-edn merged output)
-              (clj-format true fmt-wrote
-                          (count (:vars merged)) (count (:refs merged)) output)))))
+              merged   (analyze/merge-analysis existing new-db only)]
+          (emit/write-edn merged output)
+          (clj-format true fmt-wrote
+                      (count (:vars merged)) (count (:refs merged)) output)))
       (let [paths (let [p (:paths parsed)]
                     (if (seq p)
                       p
                       (into (vec (:source-paths project))
                             (:test-paths project))))]
         (clj-format true fmt-analyzing paths)
-        (let [db     (analyze/analyze paths {:project proj-name})
-              errors (:kondo-errors (meta db) 0)]
-          (if (pos? errors)
-            (binding [*out* *err*] (clj-format true fmt-aborted-errors))
-            (do
-              (emit/write-edn db output)
-              (clj-format true fmt-wrote
-                          (count (:vars db)) (count (:refs db)) output))))))))
+        (let [db (analyze/analyze paths {:project proj-name})]
+          (emit/write-edn db output)
+          (clj-format true fmt-wrote
+                      (count (:vars db)) (count (:refs db)) output))))))

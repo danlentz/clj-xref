@@ -19,12 +19,6 @@
   ["clj-xref: wrote " :int " var" [:plural {:rewind true}]
    ", " :int " ref" [:plural {:rewind true}] " -> " :str :nl])
 
-(def ^:private fmt-aborted-errors
-  ["clj-xref: generation aborted due to analysis errors. No file written." :nl])
-
-(def ^:private fmt-aborted-incremental
-  ["clj-xref: incremental update aborted due to analysis errors. Existing database unchanged." :nl])
-
 (defn generate
   "Generate an xref database EDN file.
    Accepts a map with optional keys:
@@ -40,20 +34,13 @@
       (clj-format true fmt-incremental only)
       (let [existing (emit/read-edn output)
             new-db   (analyze/analyze only {:project project})
-            errors   (:kondo-errors (meta new-db) 0)]
-        (if (pos? errors)
-          (binding [*out* *err*] (clj-format true fmt-aborted-incremental))
-          (let [merged (analyze/merge-analysis existing new-db only)]
-            (emit/write-edn merged output)
-            (clj-format true fmt-wrote
-                        (count (:vars merged)) (count (:refs merged)) output)))))
+            merged   (analyze/merge-analysis existing new-db only)]
+        (emit/write-edn merged output)
+        (clj-format true fmt-wrote
+                    (count (:vars merged)) (count (:refs merged)) output)))
     (do
       (clj-format true fmt-analyzing paths)
-      (let [db     (analyze/analyze paths {:project project})
-            errors (:kondo-errors (meta db) 0)]
-        (if (pos? errors)
-          (binding [*out* *err*] (clj-format true fmt-aborted-errors))
-          (do
-            (emit/write-edn db output)
-            (clj-format true fmt-wrote
-                        (count (:vars db)) (count (:refs db)) output)))))))
+      (let [db (analyze/analyze paths {:project project})]
+        (emit/write-edn db output)
+        (clj-format true fmt-wrote
+                    (count (:vars db)) (count (:refs db)) output)))))

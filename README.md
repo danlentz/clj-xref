@@ -88,7 +88,7 @@ lein xref :only src/myapp/orders.clj
 clj -T:xref generate :only '["src/myapp/orders.clj"]'
 ```
 
-Note: incremental mode only re-analyzes the specified files. If you change an exported definition (e.g., rename a function or change it to a macro), callers in other files retain stale metadata until a full rebuild. The update is aborted if analysis errors are detected, preserving the existing database.
+Note: incremental mode only re-analyzes the specified files. If you change an exported definition (e.g., rename a function or change it to a macro), callers in other files retain stale metadata until a full rebuild.
 
 ### Querying from the REPL
 
