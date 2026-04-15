@@ -95,10 +95,15 @@ The database is auto-generated on first query if `.clj-xref/xref.edn` doesn't ex
 clj-xref ships an example [`/xref` slash command](doc/claude-slash-command.md) for [Claude Code](https://claude.ai/code). Copy it to `.claude/commands/xref.md` in your project to add cross-reference queries as Claude commands:
 
 ```
-/xref init
-/xref who-calls myapp.orders/process-payment
-/xref unused
-/xref graph myapp.core/main
+/xref init                          — generate/regenerate the xref database
+/xref who-calls ns/fn               — who calls this function?
+/xref calls-who ns/fn               — what does this function call?
+/xref who-implements ns/Protocol     — who implements this protocol?
+/xref unused                        — find dead code (defined but never referenced)
+/xref ns-deps ns                    — what namespaces does this one depend on?
+/xref ns-dependents ns              — what namespaces depend on this one?
+/xref apropos pattern               — search for vars matching a name pattern
+/xref graph ns/fn                   — show transitive call graph
 ```
 
 The slash command wraps the same CLI, so Claude runs the queries directly in your terminal. The included prompt guidance tells Claude to use xref proactively — checking callers before changing a signature, checking dependencies before refactoring, and regenerating after edits.
