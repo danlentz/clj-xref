@@ -65,21 +65,43 @@ To use the query API in your project, add clj-xref as a dependency:
 
 ## Usage
 
-### Generating the database
+### Command-line interface
 
-```bash
-# Leiningen — analyzes :source-paths and :test-paths
-lein xref
+The fastest way to use clj-xref. Add the `:xref` alias to your `deps.edn` (project or `~/.clojure/deps.edn`):
 
-# deps.edn
-clj -T:xref generate
-
-# Custom paths or output location
-lein xref :output target/xref.edn
-clj -T:xref generate :paths '["src"]' :output '"target/xref.edn"'
+```clojure
+:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
+       :main-opts ["-m" "clj-xref.cli"]}
 ```
 
-This produces `.clj-xref/xref.edn` — a plain EDN file containing every var definition, var usage, protocol implementation, and multimethod dispatch in your project.
+Then:
+
+```bash
+clj -M:xref init                          # generate the database
+clj -M:xref who-calls myapp.orders/process-payment
+clj -M:xref calls-who myapp.web/handler
+clj -M:xref who-implements myapp.protocols/Billable
+clj -M:xref unused                        # find dead code
+clj -M:xref ns-deps myapp.orders
+clj -M:xref ns-dependents myapp.orders
+clj -M:xref apropos process
+clj -M:xref graph myapp.core/main
+```
+
+The database is auto-generated on first query if `.clj-xref/xref.edn` doesn't exist.
+
+### Generating the database
+
+You can also generate the database explicitly:
+
+```bash
+# Leiningen
+lein xref
+
+# deps.edn tool
+clj -T:xref generate
+clj -T:xref generate :paths '["src"]' :output '"target/xref.edn"'
+```
 
 Incremental mode re-analyzes specific files and merges into the existing database:
 
@@ -152,6 +174,10 @@ If you don't need the EDN file, you can analyze and query in-memory directly:
 ```
 
 This requires clj-kondo on the classpath.
+
+### Claude Code integration
+
+An example `/xref` slash command for Claude Code is included in [`doc/claude-slash-command.md`](doc/claude-slash-command.md). Copy it to `.claude/commands/xref.md` in your project to add `/xref who-calls`, `/xref unused`, etc. as Claude Code commands.
 
 ## Query API Reference
 
