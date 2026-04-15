@@ -90,6 +90,21 @@ clj -M:xref graph myapp.core/main
 
 The database is auto-generated on first query if `.clj-xref/xref.edn` doesn't exist.
 
+### Claude Code integration
+
+clj-xref ships an example [`/xref` slash command](doc/claude-slash-command.md) for [Claude Code](https://claude.ai/code). Copy it to `.claude/commands/xref.md` in your project to add cross-reference queries as Claude commands:
+
+```
+/xref init
+/xref who-calls myapp.orders/process-payment
+/xref unused
+/xref graph myapp.core/main
+```
+
+The slash command wraps the same CLI, so Claude runs the queries directly in your terminal. The included prompt guidance tells Claude to use xref proactively — checking callers before changing a signature, checking dependencies before refactoring, and regenerating after edits.
+
+This works with any AI assistant that can run shell commands. The CLI is the interface; the slash command is just a convenience wrapper.
+
 ### Generating the database
 
 You can also generate the database explicitly:
