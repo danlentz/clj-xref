@@ -16,7 +16,10 @@ All notable changes to this project will be documented in this file. This change
 - Protocol implementation type inference from enclosing `defrecord`/`deftype`.
 - Validation: `from-kondo-analysis` throws on missing analysis data instead of producing empty databases.
 - LLM token savings benchmark (`lein measure-improvement`): compares whole-tree vs xref-guided context selection using the Claude API.
-- Warning to stderr when clj-kondo reports analysis errors; generation aborted on errors to prevent writing partial databases.
+- CLI with subcommand dispatch (`clj -M:xref <command>`): `init`, `who-calls`, `calls-who`, `who-references`, `who-implements`, `who-dispatches`, `who-macroexpands`, `unused`, `ns-deps`, `ns-dependents`, `apropos`, `graph`. Auto-generates database on first query.
+- Example Claude Code `/xref` slash command in `doc/claude-slash-command.md`.
+- All formatted output uses the clj-format Hiccup-style DSL.
+- Best-effort database generation: warns to stderr on clj-kondo analysis errors instead of aborting.
 - Atomic EDN writes via temp file + rename to prevent corruption on interrupted writes.
 - Deep-merge of `:analysis` kondo config so caller additions don't clobber built-in defaults.
 - Comprehensive test suite: unit, adversarial, stress, generative (test.check), and integration tests.
