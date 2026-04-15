@@ -5,7 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.12.2"]
                  [clj-kondo/clj-kondo "2026.01.19"]
-                 [com.github.danlentz/clj-format "0.1.1"]]
+                 [com.github.danlentz/clj-format "0.1.2"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "1.1.1"]
                                   [clj-http "3.13.0"]]}}
   :aliases {"xref" ["trampoline" "run" "-m" "clojure.main" "-e"
