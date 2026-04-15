@@ -5,7 +5,9 @@
             [clj-xref.emit :as emit]
             [clj-xref.test-utils :as tu :refer [generate-large-db with-temp-edn timed]]))
 
-;; === Index build time ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Index build time                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-index-time-small
   (let [db (generate-large-db {:n-namespaces 10 :n-vars-per-ns 50 :n-refs-per-var 10})
@@ -28,7 +30,9 @@
     (is (= 100000 (count (:refs db))))
     (is (< ms 10000) (str "Index build took " ms "ms, expected < 10000ms"))))
 
-;; === Query time on large database ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query time on large database                                               ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def large-db
   (let [raw (generate-large-db {:n-namespaces 100 :n-vars-per-ns 50 :n-refs-per-var 20})]
@@ -60,7 +64,9 @@
     (is (< ms 2000) (str "ns-dependents took " ms "ms, expected < 2000ms"))
     (is (set? result))))
 
-;; === EDN write/read time ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EDN write/read time                                                        ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-edn-write-time-medium
   (let [db (generate-large-db {:n-namespaces 10 :n-vars-per-ns 50 :n-refs-per-var 10})]
@@ -87,7 +93,9 @@
         (is (< file-size (* 30 1024 1024))
             (str "File is " (/ file-size 1024 1024.0) "MB, expected < 30MB"))))))
 
-;; === Memory stability (smoke check) ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Memory stability (smoke check)                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-repeated-queries-no-crash
   (dotimes [_ 100]

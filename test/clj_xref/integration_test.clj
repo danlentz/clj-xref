@@ -5,7 +5,9 @@
             [clj-xref.emit :as emit]
             [clj-xref.test-utils :refer [with-temp-edn froms tos]]))
 
-;; === Analyze test fixtures ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Analyze test fixtures                                                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-fixture-analysis
   (let [db (xref/analyze ["test-fixtures"])]
@@ -54,7 +56,9 @@
     (testing "ns-dependents"
       (is (contains? (xref/ns-dependents db 'sample.alpha) 'sample.beta)))))
 
-;; === Full roundtrip: analyze -> write -> load -> query ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Full roundtrip: analyze -> write -> load -> query                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-full-roundtrip
   (with-temp-edn [path]
@@ -69,7 +73,9 @@
         (is (pos? (count (xref/who-calls db 'sample.alpha/greet))))
         (is (= 2 (count (xref/who-dispatches db 'sample.gamma/process-event))))))))
 
-;; === Self-analysis: clj-xref analyzes its own source ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Self-analysis: clj-xref analyzes its own source                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-self-analysis
   (let [db (xref/analyze ["src"])]
@@ -94,7 +100,9 @@
         ;; analyze is loaded via requiring-resolve, not a static dependency
         (is (not (contains? deps 'clj-xref.analyze)))))))
 
-;; === from-kondo-analysis path ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; from-kondo-analysis path                                                   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-from-kondo-analysis
   (let [kondo-run! (requiring-resolve 'clj-kondo.core/run!)
@@ -106,7 +114,9 @@
     (is (pos? (count (:vars db))))
     (is (pos? (count (xref/who-calls db 'sample.alpha/greet))))))
 
-;; === Incremental merge ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Incremental merge                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-incremental-merge
   (let [analyze-fn (requiring-resolve 'clj-xref.analyze/analyze)

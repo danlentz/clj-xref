@@ -11,7 +11,9 @@
 (def ^:private transform-ns-def @#'analyze/transform-ns-def)
 (def ^:private build-kondo-config @#'analyze/build-kondo-config)
 
-;; === classify-kind ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; classify-kind                                                              ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-classify-kind-dispatch-wins
   (is (= :dispatch (classify-kind {:defmethod true})))
@@ -31,7 +33,9 @@
   (is (= :reference (classify-kind {})))
   (is (= :reference (classify-kind {:some-other-key true}))))
 
-;; === transform-var-def ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; transform-var-def                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-transform-var-def-minimal
   (let [vd {:ns 'my.ns :name 'foo :filename "src/my/ns.clj" :row 5 :col 1}
@@ -77,7 +81,9 @@
     (is (not (contains? result :private?)))
     (is (not (contains? result :macro?)))))
 
-;; === transform-var-usage ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; transform-var-usage                                                        ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-transform-var-usage-call
   (let [vu {:from 'my.ns :from-var 'handler :to 'other.ns :name 'fmt
@@ -121,7 +127,9 @@
         result (transform-var-usage vu)]
     (is (nil? (:to result)))))
 
-;; === transform-protocol-impl ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; transform-protocol-impl                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-transform-protocol-impl-with-type-inference
   (let [var-defs [{:ns 'my.types :name 'Widget :filename "src/my/types.clj"
@@ -149,7 +157,9 @@
         result (transform-protocol-impl pi [])]
     (is (= 'my.types/render (:from result)))))
 
-;; === transform-ns-def ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; transform-ns-def                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-transform-ns-def-minimal
   (let [nd {:name 'my.ns :filename "src/my/ns.clj" :row 1 :col 1}
@@ -163,7 +173,9 @@
         result (transform-ns-def nd)]
     (is (= "A namespace" (:doc result)))))
 
-;; === transform-analysis ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; transform-analysis                                                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-transform-analysis-full
   (let [analysis {:var-definitions [{:ns 'a :name 'f :filename "a.clj" :row 1 :col 1}]
@@ -192,7 +204,9 @@
     (is (= [] (:namespaces result)))
     (is (not (contains? result :project)))))
 
-;; === build-kondo-config (deep merge) ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; build-kondo-config (deep merge)                                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-build-kondo-config-preserves-defaults
   (let [cfg (build-kondo-config {:analysis {:locals true}})]

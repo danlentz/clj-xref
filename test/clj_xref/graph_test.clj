@@ -17,7 +17,9 @@
      :namespaces [(make-ns 'app.core)
                   (make-ns 'app.util)]}))
 
-;; === ns-dep-dot ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ns-dep-dot                                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-ns-dep-dot
   (let [dot (graph/ns-dep-dot db)]
@@ -31,7 +33,9 @@
     ;; app.util has no deps, so no outgoing edges from it
     (is (not (str/includes? dot "\"app.util\" ->")))))
 
-;; === call-graph-dot ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; call-graph-dot                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-call-graph-dot
   (let [dot (graph/call-graph-dot db 'app.core/main {:depth 2})]

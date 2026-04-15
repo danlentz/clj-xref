@@ -17,7 +17,9 @@
   (or (System/getenv "ANTHROPIC_API_KEY")
       (throw (ex-info "Set ANTHROPIC_API_KEY environment variable to run the benchmark" {}))))
 
-;; === Context builders ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Context builders                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- read-source-files
   "Read all .clj files under paths. Returns {path -> content}."
@@ -77,7 +79,9 @@
      :file-count (count selected)
      :char-count (reduce + 0 (map count (vals selected)))}))
 
-;; === Claude API ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Claude API                                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- ask-claude
   "Send a question with context to the Claude Messages API."
@@ -112,7 +116,9 @@
      :model         model
      :latency-ms    ms}))
 
-;; === Correctness checking ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Correctness checking                                                       ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- check-correctness
   "Check if the answer contains all expected fragments (case-insensitive)."
@@ -126,7 +132,9 @@
      :score    (if (empty? expected) 1.0
                    (double (/ (count hits) (count expected))))}))
 
-;; === Test questions ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test questions                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def test-questions
   [{:id       :who-calls-index
@@ -149,7 +157,9 @@
     :target   'clj-xref.analyze/classify-kind
     :expected ["call" "reference" "macroexpand" "dispatch" "implement"]}])
 
-;; === Benchmark runner ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Benchmark runner                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:private fmt-progress
   ["  " :str ": whole-tree (" :int " file" [:plural {:rewind true}] ")... "])
@@ -211,7 +221,9 @@
     (clj-format true fmt-running (count questions) (or model default-model))
     (mapv #(run-single db paths % opts) questions)))
 
-;; === Output ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Output                                                                     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:private fmt-header
   [:nl "=== clj-xref Token Savings Benchmark ===" :nl :nl
