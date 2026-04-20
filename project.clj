@@ -8,9 +8,9 @@
                  [com.github.danlentz/clj-format "0.1.2"]]
   :profiles {:dev {:dependencies [[org.clojure/test.check "1.1.1"]
                                   [clj-http "3.13.0"]]}}
-  :aliases {"xref" ["trampoline" "run" "-m" "clojure.main" "-e"
-                    "(require '[clj-xref.tool :as t]) (t/generate {:paths [\"src\"]})"]
-            "measure-improvement" ["trampoline" "run" "-m" "clojure.main" "-e"
-                                   "(require '[clj-xref.bench :as b]) (b/print-results (b/run-benchmark {:paths [\"src\"]}))"]}
+  :aliases {"xref-dev" ["trampoline" "run" "-m" "clojure.main" "-e"
+                        "(require '[clj-xref.tool :as t]) (t/generate {:paths [\"src\"]})"]
+            "bench"    ["trampoline" "run" "-m" "clojure.main" "-e"
+                        "(require '[clj-xref.bench :as b]) (b/print-results (b/run-benchmark {:paths [\"src\"]}))"]}
   :signing  {:gpg-key "0CA466A1AB48F0C0264AF55307BAD70176C4B179"}
   :repl-options {:init-ns clj-xref.core})
