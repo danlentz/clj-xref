@@ -11,7 +11,9 @@
      (xref/who-references db 'my.ns/*config*)"
   (:require [clj-xref.emit :as emit]))
 
-;; === Index building ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Index building                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn index
   "Add in-memory indexes to a flat xref database map.
@@ -25,7 +27,9 @@
          :by-file      (group-by :file (:refs db))
          :ns-by-name   (into {} (map (juxt :name identity)) (:namespaces db))))
 
-;; === Database construction ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Database construction                                                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn load-db
   "Load an xref database from an EDN file and build in-memory indexes.
@@ -54,7 +58,9 @@
     (-> (transform-fn (:analysis kondo-result) {:paths (or paths []) :project project})
         index)))
 
-;; === Core queries ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Core queries                                                               ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn who-calls
   "Find all call sites of `sym`. Returns xref entries with :kind :call."
@@ -91,7 +97,9 @@
   (filterv #(= :dispatch (:kind %))
            (get (:by-target db) sym [])))
 
-;; === Namespace queries ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Namespace queries                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ns-vars
   "List all var definitions in namespace `ns-sym`."
@@ -124,7 +132,9 @@
                          (remove #(= ns-str %))
                          (map symbol))))))
 
-;; === Derived queries ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Derived queries                                                            ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn unused-vars
   "Find vars that are defined but never referenced.

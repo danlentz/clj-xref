@@ -7,7 +7,9 @@
                                                  make-db make-indexed-db
                                                  with-temp-edn]]))
 
-;; === Empty and minimal databases ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Empty and minimal databases                                                ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-completely-empty-db
   (let [db (make-indexed-db {:vars [] :refs [] :namespaces []})]
@@ -46,7 +48,9 @@
     (is (= {} (:ns-by-name db)))
     (is (= 1 (count (xref/who-calls db 'b/g))))))
 
-;; === Symbol edge cases ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Symbol edge cases                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-unqualified-symbol
   (is (= [] (xref/who-calls (make-indexed-db {:vars [] :refs [] :namespaces []}) 'foo))))
@@ -86,7 +90,9 @@
     (is (= 6 (count (xref/ns-vars db 'my.ns))))
     (is (= 1 (count (xref/who-calls db 'my.ns/*earmuffs*))))))
 
-;; === Circular and self-referential ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Circular and self-referential                                              ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-mutual-recursion
   (let [db (make-indexed-db
@@ -118,7 +124,9 @@
     (is (contains? (xref/ns-dependents db 'a) 'b))
     (is (contains? (xref/ns-dependents db 'b) 'a))))
 
-;; === Duplicate entries ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Duplicate entries                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-duplicate-refs
   (let [db (make-indexed-db
@@ -139,7 +147,9 @@
     ;; ns-vars returns both
     (is (= 2 (count (xref/ns-vars db 'a))))))
 
-;; === Transform edge cases ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Transform edge cases                                                       ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-zero-arity
   (let [db (make-indexed-db
@@ -148,7 +158,9 @@
               :namespaces []})]
     (is (= 1 (count (xref/who-calls db 'b/g))))))
 
-;; === File system edge cases ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; File system edge cases                                                     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-load-nonexistent-file
   (is (thrown? java.io.FileNotFoundException
@@ -164,7 +176,9 @@
     (spit path "{:broken [}")
     (is (thrown? Exception (emit/read-edn path)))))
 
-;; === from-kondo-analysis without analysis data ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; from-kondo-analysis without analysis data                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-from-kondo-analysis-missing-analysis
   (is (thrown-with-msg? clojure.lang.ExceptionInfo

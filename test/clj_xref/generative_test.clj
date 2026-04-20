@@ -11,7 +11,9 @@
 
 (def num-tests 100)
 
-;; === Index invariant properties ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Index invariant properties                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p1-by-target-grouping num-tests
   (prop/for-all [raw-db gen-raw-db]
@@ -50,7 +52,9 @@
       (and (= all-refs all-by-target)
            (= all-refs all-by-source)))))
 
-;; === Query subset properties ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query subset properties                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p6-who-calls-subset-of-who-references num-tests
   (prop/for-all [raw-db gen-raw-db]
@@ -92,7 +96,9 @@
                   (every? refs disps)))
               syms))))
 
-;; === Query kind correctness ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query kind correctness                                                     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p10-who-calls-only-call-kind num-tests
   (prop/for-all [raw-db gen-raw-db]
@@ -126,7 +132,9 @@
                 (every? #(= :dispatch (:kind %)) (xref/who-dispatches db sym)))
               syms))))
 
-;; === Bidirectional consistency ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Bidirectional consistency                                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p14-who-calls-calls-who-inverse num-tests
   (prop/for-all [raw-db gen-raw-db]
@@ -137,7 +145,9 @@
                      (some #{ref} (xref/calls-who db (:from ref)))))
               call-refs))))
 
-;; === Namespace query properties ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Namespace query properties                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p15-ns-deps-self-exclusion num-tests
   (prop/for-all [raw-db gen-raw-db]
@@ -166,7 +176,9 @@
                         (filter nss (xref/ns-deps db ns-a))))
               nss))))
 
-;; === EDN roundtrip property ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EDN roundtrip property                                                     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec p18-edn-roundtrip-preservation num-tests
   (prop/for-all [raw-db gen-raw-db]

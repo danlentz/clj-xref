@@ -12,6 +12,7 @@ pom.xml.asc
 .hgignore
 .hg/
 /.clj-xref
+/.cpcache
 /CLAUDE.md
 /plans
 /AGENTS.md

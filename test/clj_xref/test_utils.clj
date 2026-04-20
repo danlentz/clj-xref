@@ -5,7 +5,9 @@
             [clojure.string :as str]
             [clojure.test.check.generators :as gen]))
 
-;; === Helpers ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Helpers                                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- ns->file [ns-sym]
   (str "src/" (str/replace (str ns-sym) "." "/") ".clj"))
@@ -14,7 +16,9 @@
 (defn tos [refs] (set (map :to refs)))
 (defn kinds [refs] (set (map :kind refs)))
 
-;; === Builders ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Builders                                                                   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn make-var
   "Build a var-info map. Overrides replace defaults."
@@ -67,7 +71,9 @@
   [content]
   (xref/index (make-db content)))
 
-;; === Temp file helper ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Temp file helper                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro with-temp-edn
   "Create a temp .edn file, bind its path, delete on exit."
@@ -79,7 +85,9 @@
        (finally
          (.delete f#)))))
 
-;; === Timing helper ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Timing helper                                                              ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn timed
   "Execute f, return {:result ... :ms ...}."
@@ -89,7 +97,9 @@
         ms     (/ (- (System/nanoTime) start) 1e6)]
     {:result result :ms ms}))
 
-;; === Large database generator (deterministic) ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Large database generator (deterministic)                                   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn generate-large-db
   "Generate a synthetic database with controllable dimensions."
@@ -110,7 +120,9 @@
                                :line (+ 10 ri))))]
     (make-db {:vars vars :refs refs :namespaces (mapv make-ns nss)})))
 
-;; === test.check generators ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; test.check generators                                                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def gen-kind
   (gen/elements [:call :reference :macroexpand :dispatch :implement]))

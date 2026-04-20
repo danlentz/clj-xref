@@ -6,7 +6,9 @@
                                                  with-temp-edn generate-large-db]]
             [clojure.string :as str]))
 
-;; === Roundtrip fidelity ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Roundtrip fidelity                                                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-roundtrip-scalars
   (with-temp-edn [path]
@@ -70,7 +72,9 @@
         (is (= (count (:refs db)) (count (:refs loaded))))
         (is (= (count (:namespaces db)) (count (:namespaces loaded))))))))
 
-;; === Special characters ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Special characters                                                         ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-roundtrip-special-symbols
   (with-temp-edn [path]
@@ -102,7 +106,9 @@
         (is (= "line1\nline2\n\"quoted\"" (:doc (first (:vars loaded)))))
         (is (= "has \"quotes\" and\nnewlines" (:doc (first (:namespaces loaded)))))))))
 
-;; === File system behavior ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; File system behavior                                                       ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-write-creates-parent-dirs
   (let [dir (java.io.File/createTempFile "xref-dir" "")
@@ -127,7 +133,9 @@
   (is (thrown? java.io.FileNotFoundException
         (emit/read-edn "/no/such/file/xref.edn"))))
 
-;; === Greppability ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Greppability                                                               ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-one-entry-per-line
   (with-temp-edn [path]

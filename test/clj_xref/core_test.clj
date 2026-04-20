@@ -33,7 +33,9 @@
                   (make-ns 'app.util)
                   (make-ns 'app.proto)]}))
 
-;; === index ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; index                                                                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-index-by-target
   (doseq [[sym entries] (:by-target db)]
@@ -63,7 +65,9 @@
     (is (= {} (:vars-by-name empty-db)))
     (is (= {} (:ns-by-name empty-db)))))
 
-;; === who-calls ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; who-calls                                                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-who-calls
   (let [results (xref/who-calls db 'app.util/format-name)]
@@ -87,7 +91,9 @@
     (is (= 1 (count (xref/who-calls db 'a/f))))
     (is (= 'a/f (:from (first (xref/who-calls db 'a/f)))))))
 
-;; === calls-who ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; calls-who                                                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-calls-who
   (let [results (xref/calls-who db 'app.core/main)]
@@ -103,7 +109,9 @@
 (deftest test-calls-who-no-results
   (is (= [] (xref/calls-who db 'app.util/format-name))))
 
-;; === who-references ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; who-references                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-who-references-all-kinds
   (let [results (xref/who-references db 'app.util/format-name)]
@@ -115,7 +123,9 @@
         calls (set (xref/who-calls db 'app.util/format-name))]
     (is (every? refs calls))))
 
-;; === who-macroexpands ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; who-macroexpands                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-who-macroexpands
   (let [results (xref/who-macroexpands db 'app.util/with-log)]
@@ -125,7 +135,9 @@
 (deftest test-who-macroexpands-no-results
   (is (= [] (xref/who-macroexpands db 'app.util/format-name))))
 
-;; === who-implements ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; who-implements                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-who-implements
   (let [results (xref/who-implements db 'app.proto/Renderable)]
@@ -142,7 +154,9 @@
 (deftest test-who-implements-no-results
   (is (= [] (xref/who-implements db 'app.core/main))))
 
-;; === who-dispatches ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; who-dispatches                                                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-who-dispatches
   (let [results (xref/who-dispatches db 'app.core/process-event)]
@@ -152,7 +166,9 @@
 (deftest test-who-dispatches-no-results
   (is (= [] (xref/who-dispatches db 'app.core/main))))
 
-;; === ns-vars ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ns-vars                                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-ns-vars
   (let [vars (xref/ns-vars db 'app.core)]
@@ -163,7 +179,9 @@
 (deftest test-ns-vars-empty
   (is (= [] (xref/ns-vars db 'nonexistent.ns))))
 
-;; === ns-deps ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ns-deps                                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-ns-deps
   (let [deps (xref/ns-deps db 'app.core)]
@@ -174,7 +192,9 @@
 (deftest test-ns-deps-isolated
   (is (= #{} (xref/ns-deps db 'app.proto))))
 
-;; === ns-dependents ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ns-dependents                                                              ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-ns-dependents
   (let [deps (xref/ns-dependents db 'app.util)]
@@ -184,7 +204,9 @@
 (deftest test-ns-dependents-no-dependents
   (is (= #{} (xref/ns-dependents db 'app.core))))
 
-;; === unused-vars ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; unused-vars                                                                ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-unused-vars
   (let [unused (set (map :name (xref/unused-vars db)))]
@@ -207,7 +229,9 @@
     (is (= ['a/pub] without-private))
     (is (= #{'a/pub 'a/priv} (set with-private)))))
 
-;; === call-graph ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; call-graph                                                                 ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-call-graph-outgoing
   (let [edges (xref/call-graph db 'app.core/main {:depth 2 :direction :outgoing})]
@@ -247,7 +271,9 @@
 (deftest test-call-graph-empty
   (is (= #{} (xref/call-graph db 'app.util/format-name {:depth 3 :direction :outgoing}))))
 
-;; === apropos ===
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; apropos                                                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-apropos
   (let [results (xref/apropos db "format")]

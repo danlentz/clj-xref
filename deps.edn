@@ -1,7 +1,9 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.12.2"}
-        clj-kondo/clj-kondo {:mvn/version "2026.01.19"}}
+        clj-kondo/clj-kondo {:mvn/version "2026.01.19"}
+        com.github.danlentz/clj-format {:mvn/version "0.1.2"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}}}
-  :xref {:ns-default clj-xref.tool}}}
+  :xref {:main-opts  ["-m" "clj-xref.cli"]
+         :ns-default clj-xref.tool}}}

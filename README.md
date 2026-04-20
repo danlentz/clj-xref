@@ -38,48 +38,91 @@ Think of it as [ctags](https://ctags.io/) or [cscope](http://cscope.sourceforge.
 Add clj-xref to your `:plugins` vector in `project.clj`:
 
 ```clojure
-:plugins [[com.github.danlentz/clj-xref "0.1.0"]]
+:plugins [[com.github.danlentz/clj-xref "0.1.1"]]
 ```
 
 To also use the query API from your REPL, add it to `:dependencies`:
 
 ```clojure
-:dependencies [[com.github.danlentz/clj-xref "0.1.0"]]
+:dependencies [[com.github.danlentz/clj-xref "0.1.1"]]
 ```
 
 ### deps.edn
 
-Add a tool alias to your `deps.edn`:
+Add the `:xref` alias to your `deps.edn` (project-local or `~/.clojure/deps.edn`):
 
 ```clojure
 {:aliases
- {:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
+ {:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.1"}}
+         :main-opts  ["-m" "clj-xref.cli"]
          :ns-default clj-xref.tool}}}
 ```
 
-To use the query API in your project, add clj-xref as a dependency:
+The same alias serves both modes:
+
+- `clj -M:xref <command>` — CLI subcommands (see [Command-line interface](#command-line-interface) below).
+- `clj -T:xref generate ...` — tool invocation for database generation (see [Generating the database](#generating-the-database)).
+
+To use the query API from your own code, add clj-xref as a dependency:
 
 ```clojure
-{:deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}}
+{:deps {com.github.danlentz/clj-xref {:mvn/version "0.1.1"}}}
 ```
 
 ## Usage
 
-### Generating the database
+### Command-line interface
+
+The fastest way to use clj-xref. With the `:xref` alias from [Installation](#depsedn) in place:
 
 ```bash
-# Leiningen — analyzes :source-paths and :test-paths
-lein xref
-
-# deps.edn
-clj -T:xref generate
-
-# Custom paths or output location
-lein xref :output target/xref.edn
-clj -T:xref generate :paths '["src"]' :output '"target/xref.edn"'
+clj -M:xref init                          # generate the database
+clj -M:xref who-calls myapp.orders/process-payment
+clj -M:xref calls-who myapp.web/handler
+clj -M:xref who-implements myapp.protocols/Billable
+clj -M:xref unused                        # find dead code
+clj -M:xref ns-deps myapp.orders
+clj -M:xref ns-dependents myapp.orders
+clj -M:xref apropos process
+clj -M:xref graph myapp.core/main
 ```
 
-This produces `.clj-xref/xref.edn` — a plain EDN file containing every var definition, var usage, protocol implementation, and multimethod dispatch in your project.
+The database is auto-generated on first query if `.clj-xref/xref.edn` doesn't exist.
+
+### Claude Code integration
+
+clj-xref ships two drop-in artifacts for [Claude Code](https://claude.ai/code):
+
+**1. `/xref` slash command** — [`doc/claude-slash-command.md`](doc/claude-slash-command.md). Copy into `.claude/commands/xref.md` in your project to expose the queries as user-initiated slash commands:
+
+```
+/xref init                          — generate/regenerate the xref database
+/xref who-calls ns/fn               — who calls this function?
+/xref calls-who ns/fn               — what does this function call?
+/xref who-implements ns/Protocol     — who implements this protocol?
+/xref unused                        — find dead code (defined but never referenced)
+/xref ns-deps ns                    — what namespaces does this one depend on?
+/xref ns-dependents ns              — what namespaces depend on this one?
+/xref apropos pattern               — search for vars matching a name pattern
+/xref graph ns/fn                   — show transitive call graph
+```
+
+**2. `CLAUDE.md` project guidance** — [`doc/claude-md-template.md`](doc/claude-md-template.md). Paste the snippet into your project's `CLAUDE.md` to teach Claude to invoke xref *proactively* during normal coding work — before changing a signature, before deleting a var, when tracing flow in unfamiliar code. Unlike the slash command (user-initiated), the CLAUDE.md guidance shifts the initiative to Claude based on context.
+
+Both artifacts wrap the same CLI and work with any AI assistant that can run shell commands. The CLI is the interface; the slash command and CLAUDE.md snippet are convenience layers for different invocation styles.
+
+### Generating the database
+
+You can also generate the database explicitly:
+
+```bash
+# Leiningen
+lein xref
+
+# deps.edn tool
+clj -T:xref generate
+clj -T:xref generate :paths '["src"]' :output '"target/xref.edn"'
+```
 
 Incremental mode re-analyzes specific files and merges into the existing database:
 
@@ -88,7 +131,7 @@ lein xref :only src/myapp/orders.clj
 clj -T:xref generate :only '["src/myapp/orders.clj"]'
 ```
 
-Note: incremental mode only re-analyzes the specified files. If you change an exported definition (e.g., rename a function or change it to a macro), callers in other files retain stale metadata until a full rebuild. The update is aborted if analysis errors are detected, preserving the existing database.
+Note: incremental mode only re-analyzes the specified files. If you change an exported definition (e.g., rename a function or change it to a macro), callers in other files retain stale metadata until a full rebuild.
 
 ### Querying from the REPL
 
@@ -152,6 +195,10 @@ If you don't need the EDN file, you can analyze and query in-memory directly:
 ```
 
 This requires clj-kondo on the classpath.
+
+### Claude Code integration
+
+An example `/xref` slash command for Claude Code is included in [`doc/claude-slash-command.md`](doc/claude-slash-command.md). Copy it to `.claude/commands/xref.md` in your project to add `/xref who-calls`, `/xref unused`, etc. as Claude Code commands.
 
 ## Query API Reference
 
