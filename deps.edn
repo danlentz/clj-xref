@@ -5,4 +5,5 @@
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}}}
-  :xref {:main-opts ["-m" "clj-xref.cli"]}}}
+  :xref {:main-opts  ["-m" "clj-xref.cli"]
+         :ns-default clj-xref.tool}}}
