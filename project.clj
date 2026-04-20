@@ -1,4 +1,4 @@
-(defproject com.github.danlentz/clj-xref "0.1.0"
+(defproject com.github.danlentz/clj-xref "0.1.1"
   :description "Cross-reference database for Clojure code"
   :url "https://github.com/danlentz/clj-xref"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"

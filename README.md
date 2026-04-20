@@ -38,13 +38,13 @@ Think of it as [ctags](https://ctags.io/) or [cscope](http://cscope.sourceforge.
 Add clj-xref to your `:plugins` vector in `project.clj`:
 
 ```clojure
-:plugins [[com.github.danlentz/clj-xref "0.1.0"]]
+:plugins [[com.github.danlentz/clj-xref "0.1.1"]]
 ```
 
 To also use the query API from your REPL, add it to `:dependencies`:
 
 ```clojure
-:dependencies [[com.github.danlentz/clj-xref "0.1.0"]]
+:dependencies [[com.github.danlentz/clj-xref "0.1.1"]]
 ```
 
 ### deps.edn
@@ -53,7 +53,7 @@ Add the `:xref` alias to your `deps.edn` (project-local or `~/.clojure/deps.edn`
 
 ```clojure
 {:aliases
- {:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
+ {:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.1"}}
          :main-opts  ["-m" "clj-xref.cli"]
          :ns-default clj-xref.tool}}}
 ```
@@ -66,7 +66,7 @@ The same alias serves both modes:
 To use the query API from your own code, add clj-xref as a dependency:
 
 ```clojure
-{:deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}}
+{:deps {com.github.danlentz/clj-xref {:mvn/version "0.1.1"}}}
 ```
 
 ## Usage

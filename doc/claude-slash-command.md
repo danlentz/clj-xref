@@ -7,7 +7,7 @@ Drop this file into `.claude/commands/xref.md` in any Clojure project to add `/x
 Add the `:xref` alias to your `~/.clojure/deps.edn` (or project `deps.edn`):
 
 ```clojure
-:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
+:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.1"}}
        :main-opts  ["-m" "clj-xref.cli"]
        :ns-default clj-xref.tool}
 ```
