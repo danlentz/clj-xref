@@ -91,7 +91,9 @@ The database is auto-generated on first query if `.clj-xref/xref.edn` doesn't ex
 
 ### Claude Code integration
 
-clj-xref ships an example [`/xref` slash command](doc/claude-slash-command.md) for [Claude Code](https://claude.ai/code). Copy it to `.claude/commands/xref.md` in your project to add cross-reference queries as Claude commands:
+clj-xref ships two drop-in artifacts for [Claude Code](https://claude.ai/code):
+
+**1. `/xref` slash command** — [`doc/claude-slash-command.md`](doc/claude-slash-command.md). Copy into `.claude/commands/xref.md` in your project to expose the queries as user-initiated slash commands:
 
 ```
 /xref init                          — generate/regenerate the xref database
@@ -105,9 +107,9 @@ clj-xref ships an example [`/xref` slash command](doc/claude-slash-command.md) f
 /xref graph ns/fn                   — show transitive call graph
 ```
 
-The slash command wraps the same CLI, so Claude runs the queries directly in your terminal. The included prompt guidance tells Claude to use xref proactively — checking callers before changing a signature, checking dependencies before refactoring, and regenerating after edits.
+**2. `CLAUDE.md` project guidance** — [`doc/claude-md-template.md`](doc/claude-md-template.md). Paste the snippet into your project's `CLAUDE.md` to teach Claude to invoke xref *proactively* during normal coding work — before changing a signature, before deleting a var, when tracing flow in unfamiliar code. Unlike the slash command (user-initiated), the CLAUDE.md guidance shifts the initiative to Claude based on context.
 
-This works with any AI assistant that can run shell commands. The CLI is the interface; the slash command is just a convenience wrapper.
+Both artifacts wrap the same CLI and work with any AI assistant that can run shell commands. The CLI is the interface; the slash command and CLAUDE.md snippet are convenience layers for different invocation styles.
 
 ### Generating the database
 
