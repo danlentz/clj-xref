@@ -81,6 +81,54 @@
     (is (not (contains? result :private?)))
     (is (not (contains? result :macro?)))))
 
+;; Regression for issue #3: clj-kondo can emit non-symbol values
+;; (specifically `clj_kondo.impl.rewrite_clj.node.token.TokenNode`) in
+;; fields that are documented as symbols, when macros expand to def.
+;; The transform must coerce these into real symbols so the EDN round-trip
+;; in emit/read-edn does not break.
+(deftype ^:private MockToken [s]
+  Object
+  (toString [_] s))
+
+(deftest test-transform-var-def-coerces-non-symbol-fields
+  (testing "TokenNode-like :name is coerced to a real symbol"
+    (let [vd {:ns 'my.ns
+              :name (MockToken. "Foo")
+              :filename "x.clj" :row 1 :col 1}
+          result (transform-var-def vd)]
+      (is (symbol? (:local-name result)))
+      (is (= 'Foo (:local-name result)))
+      (is (symbol? (:name result)))
+      (is (= 'my.ns/Foo (:name result)))))
+
+  (testing "non-symbol :ns, :defined-by, :protocol-* are coerced"
+    (let [vd {:ns (MockToken. "my.ns")
+              :name (MockToken. "m")
+              :filename "x.clj" :row 1 :col 1
+              :defined-by (MockToken. "clojure.core/defn")
+              :protocol-ns (MockToken. "my.proto")
+              :protocol-name (MockToken. "MyProto")}
+          result (transform-var-def vd)]
+      (is (symbol? (:ns result)))
+      (is (= 'my.ns (:ns result)))
+      (is (symbol? (:defined-by result)))
+      (is (= 'clojure.core/defn (:defined-by result)))
+      (is (symbol? (get-in result [:protocol :ns])))
+      (is (symbol? (get-in result [:protocol :name])))
+      (is (= {:ns 'my.proto :name 'MyProto} (:protocol result)))))
+
+  (testing "result round-trips cleanly through EDN"
+    (let [vd     {:ns 'my.ns
+                  :name (MockToken. "Foo")
+                  :filename "x.clj" :row 1 :col 1
+                  :defined-by (MockToken. "clojure.core/def")}
+          result (transform-var-def vd)
+          ;; Writing via prn and reading back via edn/read-string must succeed
+          ;; — pre-fix, this would produce `<token: Foo>` and fail to parse.
+          parsed (clojure.edn/read-string (pr-str result))]
+      (is (= result parsed))
+      (is (symbol? (:local-name parsed))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; transform-var-usage                                                        ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -4,6 +4,22 @@
             [clj-format.core :refer [clj-format]])
   (:import [java.time Instant]))
 
+(defn- as-symbol
+  "Coerce a value to a proper clojure.lang.Symbol.
+
+   clj-kondo occasionally emits non-symbol values in fields that are
+   documented as symbols — in particular, `clj_kondo.impl.rewrite_clj.node.token.TokenNode`
+   instances appear in :var-definitions :name when macros expand to
+   def. These objects `str` and `toString` correctly but their `prn`
+   representation (e.g. `<token: Foo>`) is not valid EDN and breaks
+   round-tripping through the on-disk database.
+
+   This helper normalizes any such value into a real symbol before it
+   reaches the transform output."
+  [x]
+  (when x
+    (if (symbol? x) x (symbol (str x)))))
+
 (defn- qualify-symbol
   "Build a namespace-qualified symbol from ns and name."
   [ns-sym name-sym]
@@ -23,8 +39,8 @@
   "Transform a clj-kondo :var-definitions entry into a var-info map."
   [vd]
   (cond-> {:name       (qualify-symbol (:ns vd) (:name vd))
-           :ns         (:ns vd)
-           :local-name (:name vd)
+           :ns         (as-symbol (:ns vd))
+           :local-name (as-symbol (:name vd))
            :file       (:filename vd)
            :line       (:row vd)
            :col        (:col vd)}
@@ -34,10 +50,10 @@
     (:varargs-min-arity vd) (assoc :varargs-min-arity (:varargs-min-arity vd))
     (:private vd)           (assoc :private? true)
     (:macro vd)             (assoc :macro? true)
-    (:defined-by vd)        (assoc :defined-by (:defined-by vd))
+    (:defined-by vd)        (assoc :defined-by (as-symbol (:defined-by vd)))
     (:doc vd)               (assoc :doc (:doc vd))
-    (:protocol-ns vd)       (assoc :protocol {:ns   (:protocol-ns vd)
-                                              :name (:protocol-name vd)})))
+    (:protocol-ns vd)       (assoc :protocol {:ns   (as-symbol (:protocol-ns vd))
+                                              :name (as-symbol (:protocol-name vd))})))
 
 (defn- transform-var-usage
   "Transform a clj-kondo :var-usages entry into an xref-entry map."
@@ -70,12 +86,13 @@
                         (>= (:end-row vd) row)
                         (contains? #{'clojure.core/defrecord
                                      'clojure.core/deftype}
-                                   (:defined-by vd))
+                                   (as-symbol (:defined-by vd)))
                         (let [n (str (:name vd))]
                           (not (or (.startsWith n "->")
                                    (.startsWith n "map->")))))))
          first
-         :name)))
+         :name
+         as-symbol)))
 
 (defn- transform-protocol-impl
   "Transform a clj-kondo :protocol-impls entry into an xref-entry map.
@@ -90,15 +107,15 @@
              :file       (:filename pi)
              :line       (:row pi)
              :col        (:col pi)
-             :method     (:method-name pi)}
+             :method     (as-symbol (:method-name pi))}
       (:end-row pi)    (assoc :end-line (:end-row pi))
       (:end-col pi)    (assoc :end-col (:end-col pi))
-      (:defined-by pi) (assoc :defined-by (:defined-by pi)))))
+      (:defined-by pi) (assoc :defined-by (as-symbol (:defined-by pi))))))
 
 (defn- transform-ns-def
   "Transform a clj-kondo :namespace-definitions entry into an ns-info map."
   [nd]
-  (cond-> {:name (:name nd)
+  (cond-> {:name (as-symbol (:name nd))
            :file (:filename nd)
            :line (:row nd)
            :col  (:col nd)}
