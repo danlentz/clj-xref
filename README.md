@@ -49,15 +49,21 @@ To also use the query API from your REPL, add it to `:dependencies`:
 
 ### deps.edn
 
-Add a tool alias to your `deps.edn`:
+Add the `:xref` alias to your `deps.edn` (project-local or `~/.clojure/deps.edn`):
 
 ```clojure
 {:aliases
  {:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
+         :main-opts  ["-m" "clj-xref.cli"]
          :ns-default clj-xref.tool}}}
 ```
 
-To use the query API in your project, add clj-xref as a dependency:
+The same alias serves both modes:
+
+- `clj -M:xref <command>` — CLI subcommands (see [Command-line interface](#command-line-interface) below).
+- `clj -T:xref generate ...` — tool invocation for database generation (see [Generating the database](#generating-the-database)).
+
+To use the query API from your own code, add clj-xref as a dependency:
 
 ```clojure
 {:deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}}
@@ -67,14 +73,7 @@ To use the query API in your project, add clj-xref as a dependency:
 
 ### Command-line interface
 
-The fastest way to use clj-xref. Add the `:xref` alias to your `deps.edn` (project or `~/.clojure/deps.edn`):
-
-```clojure
-:xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
-       :main-opts ["-m" "clj-xref.cli"]}
-```
-
-Then:
+The fastest way to use clj-xref. With the `:xref` alias from [Installation](#depsedn) in place:
 
 ```bash
 clj -M:xref init                          # generate the database

@@ -8,8 +8,11 @@ Add the `:xref` alias to your `~/.clojure/deps.edn` (or project `deps.edn`):
 
 ```clojure
 :xref {:extra-deps {com.github.danlentz/clj-xref {:mvn/version "0.1.0"}}
-       :main-opts ["-m" "clj-xref.cli"]}
+       :main-opts  ["-m" "clj-xref.cli"]
+       :ns-default clj-xref.tool}
 ```
+
+The alias serves both `clj -M:xref <cmd>` (CLI subcommands used below) and `clj -T:xref generate` (tool invocation for database generation).
 
 Ensure `.clj-xref/` is in `.gitignore`.
 
